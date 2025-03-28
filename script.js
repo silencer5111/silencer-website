@@ -358,4 +358,185 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('scroll', checkInviteSectionVisibility);
     // التحقق عند تحميل الصفحة
     setTimeout(checkInviteSectionVisibility, 500);
-}); 
+
+    // التحقق من صحة بيانات تسجيل الدخول
+    const loginForm = document.querySelector('.login-form');
+    const registerForm = document.querySelector('.register-form');
+    
+    // معالجة نموذج تسجيل الدخول
+    if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // التحقق من أن الحقول غير فارغة
+            if (!username || !password) {
+                showError('الرجاء إدخال اسم المستخدم وكلمة المرور');
+                return;
+            }
+            
+            // هنا يمكنك إضافة التحقق من قاعدة البيانات
+            // هذا مثال بسيط للتحقق
+            if (username === 'admin' && password === 'admin123') {
+                showSuccess('تم تسجيل الدخول بنجاح');
+                // تحديث معلومات المستخدم في القائمة المنسدلة
+                updateUserMenu({
+                    username: username,
+                    fullname: 'المدير',
+                    email: 'admin@example.com'
+                });
+                // إخفاء نموذج تسجيل الدخول وإظهار قائمة المستخدم
+                setTimeout(() => {
+                    document.querySelector('.login-section').style.display = 'none';
+                    document.querySelector('.user-menu').style.display = 'block';
+                }, 1500);
+            } else {
+                showError('اسم المستخدم أو كلمة المرور غير صحيحة');
+            }
+        });
+    }
+    
+    // معالجة نموذج التسجيل
+    if (registerForm) {
+        registerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fullname = document.getElementById('fullname').value;
+            const email = document.getElementById('email').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            // التحقق من أن جميع الحقول مملوءة
+            if (!fullname || !email || !username || !password || !confirmPassword) {
+                showError('الرجاء ملء جميع الحقول المطلوبة');
+                return;
+            }
+            
+            // التحقق من صحة البريد الإلكتروني
+            if (!isValidEmail(email)) {
+                showError('الرجاء إدخال بريد إلكتروني صحيح');
+                return;
+            }
+            
+            // التحقق من تطابق كلمتي المرور
+            if (password !== confirmPassword) {
+                showError('كلمتا المرور غير متطابقتين');
+                return;
+            }
+            
+            // التحقق من طول كلمة المرور
+            if (password.length < 8) {
+                showError('يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل');
+                return;
+            }
+            
+            // تحديث معلومات المستخدم في القائمة المنسدلة
+            updateUserMenu({
+                username: username,
+                fullname: fullname,
+                email: email
+            });
+            
+            showSuccess('تم إنشاء الحساب بنجاح');
+            setTimeout(() => {
+                document.querySelector('.register-section').style.display = 'none';
+                document.querySelector('.user-menu').style.display = 'block';
+            }, 1500);
+        });
+    }
+
+    // دالة تحديث قائمة المستخدم
+    function updateUserMenu(userData) {
+        const userMenu = document.querySelector('.user-menu');
+        const userName = userMenu.querySelector('.user-name');
+        const userFullname = userMenu.querySelector('.user-fullname');
+        const userEmail = userMenu.querySelector('.user-email');
+        
+        userName.textContent = userData.username;
+        userFullname.textContent = userData.fullname;
+        userEmail.textContent = userData.email;
+    }
+
+    // إضافة وظائف القائمة المنسدلة
+    const userMenu = document.querySelector('.user-menu');
+    const userMenuTrigger = document.querySelector('.user-menu-trigger');
+    const logoutBtn = document.querySelector('.logout-btn');
+
+    if (userMenuTrigger) {
+        userMenuTrigger.addEventListener('click', () => {
+            userMenu.classList.toggle('active');
+        });
+    }
+
+    // إغلاق القائمة المنسدلة عند النقر خارجها
+    document.addEventListener('click', (e) => {
+        if (!userMenu.contains(e.target)) {
+            userMenu.classList.remove('active');
+        }
+    });
+
+    // معالجة تسجيل الخروج
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // إخفاء قائمة المستخدم
+            userMenu.style.display = 'none';
+            // إظهار نموذج تسجيل الدخول
+            document.querySelector('.login-section').style.display = 'flex';
+            showSuccess('تم تسجيل الخروج بنجاح');
+        });
+    }
+});
+
+// دالة للتحقق من صحة البريد الإلكتروني
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+// دالة لعرض رسالة الخطأ
+function showError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.textContent = message;
+    
+    // إزالة أي رسائل خطأ سابقة
+    const existingError = document.querySelector('.error-message');
+    if (existingError) {
+        existingError.remove();
+    }
+    
+    // إضافة رسالة الخطأ الجديدة
+    const form = document.querySelector('.login-form, .register-form');
+    form.insertBefore(errorDiv, form.firstChild);
+    
+    // إخفاء رسالة الخطأ بعد 3 ثواني
+    setTimeout(() => {
+        errorDiv.remove();
+    }, 3000);
+}
+
+// دالة لعرض رسالة النجاح
+function showSuccess(message) {
+    const successDiv = document.createElement('div');
+    successDiv.className = 'success-message';
+    successDiv.textContent = message;
+    
+    // إزالة أي رسائل نجاح سابقة
+    const existingSuccess = document.querySelector('.success-message');
+    if (existingSuccess) {
+        existingSuccess.remove();
+    }
+    
+    // إضافة رسالة النجاح الجديدة
+    const form = document.querySelector('.login-form, .register-form');
+    form.insertBefore(successDiv, form.firstChild);
+    
+    // إخفاء رسالة النجاح بعد 3 ثواني
+    setTimeout(() => {
+        successDiv.remove();
+    }, 3000);
+} 
